@@ -36,6 +36,7 @@ class svm:
         self.w = np.zeros(len(self.X))
         if(self.tipo == 'linear'):
             self.w, self.b = form.kernel_linear(self.X,self.Y)
+        #if's para outros kernels
 
     def predict(self, X) -> int:
         """[Função para classificar exemplos que não estão na base de treinamento]
