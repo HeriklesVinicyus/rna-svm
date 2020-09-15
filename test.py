@@ -3,6 +3,8 @@ import classificador.form as form
 import numpy as np
 import matplotlib.pyplot as plt
 
+#para teste 
+from sklearn.svm import SVC
 
 
 ###Teste
@@ -21,24 +23,41 @@ y = np.where(y==2,-1,1)
 
 x_trein, y_trein, x_test, y_test = form.split_in_training_and_test(X,y,80)
 clsf_l = svm(kernel='linear') 
+clsf_e = svm(kernel='gaus',non_linear_parametro=0.1)
+#polinomial não ta funcionando. (não sei o pq)
 #clsf_p = svm(kernel='poli',non_linear_parametro=3) 
-clsf_e = svm(kernel='gaus',non_linear_parametro=5.0) 
 
-print(len(x_trein)+len(x_test), len(y_trein)+len(y_test),len(X),len(y))
+#teste
+clsf_t_rbf = SVC(kernel='rbf')
+clsf_t_l = SVC(kernel='linear')
+clsf_t_poli = SVC(kernel='poly')
+
 
 clsf_l.fit(x_trein,y_trein)
 clsf_e.fit(x_trein,y_trein)
 #clsf_p.fit(x_trein,y_trein)
 
+clsf_t_rbf.fit(x_trein,y_trein)
+clsf_t_l.fit(x_trein,y_trein)
+clsf_t_poli.fit(x_trein,y_trein)
 
 yi_l = [clsf_l.predict(x) for x in x_test]
 yi_e = [clsf_e.predict(x) for x in x_test]
 #yi_p = [clsf_p.predict(x) for x in x_test]
 
-print('\n\n\n',yi_e,'\n\n\n',y_test)
+yi_t_rbf = [clsf_t_rbf.predict([x]) for x in x_test]
+yi_t_l = [clsf_t_l.predict([x]) for x in x_test]
+yi_t_poli = [clsf_t_poli.predict([x]) for x in x_test]
+
+
+#print('\n\n\n',yi_l,'\n\n\n',y_test)
 
 print('Acuracia:')
 print('linear: ',form.accuracy(y_test,yi_l))
 print('Gaussiano: ',form.accuracy(y_test,yi_e))
 #print('Polinomial: ',form.accuracy(y_test,yi_p))
+print('(test)SVC rfb: ',form.accuracy(y_test,yi_t_rbf))
+print('(test)SVC linear: ',form.accuracy(y_test,yi_t_l))
+print('(test)SVC poly: ',form.accuracy(y_test,yi_t_poli))
+
 
