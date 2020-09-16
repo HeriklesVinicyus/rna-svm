@@ -22,7 +22,7 @@ y = np.array(y)
 y = np.where(y==2,-1,1)
 
 x_trein, y_trein, x_test, y_test = form.split_in_training_and_test(X,y,80)
-clsf_l = svm(kernel='linear') 
+clsf_l = svm(kernel='teste',C=1000) 
 #clsf_e = svm(kernel='gaus',non_linear_parametro=0.1)
 #polinomial não ta funcionando. (não sei o pq)
 #clsf_p = svm(kernel='poli',non_linear_parametro=3) 
@@ -32,10 +32,10 @@ clsf_t_rbf = SVC(kernel='rbf')
 clsf_t_l = SVC(kernel='linear',C=1000)
 clsf_t_poli = SVC(kernel='poly')
 
-print(np.array(x_trein))
+#print(np.array(x_trein))
 
 clsf_l.fit(np.array(x_trein),np.array(y_trein))
-#clsf_e.fit(x_trein,y_trein)
+#clsf_e.fit(np.array(x_trein),np.array(y_trein))
 #clsf_p.fit(x_trein,y_trein)
 
 clsf_t_rbf.fit(x_trein,y_trein)
