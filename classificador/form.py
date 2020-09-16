@@ -86,7 +86,8 @@ def split_in_training_and_test(X: np.ndarray, Y: np.ndarray, size_training_db: i
 def accuracy(y: list, yi: list) -> float:
     ac = 0
     for i in range(len(y)):
-        if y[i] == yi[i]:
+        if y[i] == yi[i]:    #ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+            
             ac += 1
     # porcentagem da acuracia
     return (ac*100)/len(y)
