@@ -10,7 +10,7 @@ import random
 import math
 
 
-def find_alpha(X, Y, C, K) -> np.ndarray:
+def find_alpha(X, Y, C, K, n_l_p=3) -> np.ndarray:
     # Setting solver parameters (change default to decrease tolerance)
     cvxopt_solvers.options['show_progress'] = False
     cvxopt_solvers.options['abstol'] = 1e-10
@@ -19,7 +19,7 @@ def find_alpha(X, Y, C, K) -> np.ndarray:
 
     if C == None:
         m, n = X.shape
-        H = _H(X, Y, K)
+        H = _H(X, Y, K, n_l_p)
 
         # Converting into cvxopt format
         P = cvxopt_matrix(H)
@@ -29,13 +29,17 @@ def find_alpha(X, Y, C, K) -> np.ndarray:
         A = cvxopt_matrix(Y, (1, m), 'd')
         b = cvxopt_matrix(np.zeros(1))
 
+        print("{}\np: {}x{}\nq: {}x{}\ng: {}x{}\nh: {}x{}\na: {}x{}\nH: {}x{}\n".format(K,
+                                                                                        P.size[0], P.size[1], P.size[0], P.size[1], q.size[0], q.size[1], G.size[0], G.size[1], h.size[0], h.size[1], A.size[0], A.size[1], H.shape[0], H.shape[1]))
+
+
         # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
         alphas = np.array(sol['x'])
     else:
         C = 10
         m, n = X.shape
-        H = _H(X, Y, K)
+        H = _H(X, Y, K, n_l_p)
 
         # Converting into cvxopt format - as previously
         P = cvxopt_matrix(H)
@@ -44,6 +48,9 @@ def find_alpha(X, Y, C, K) -> np.ndarray:
         h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
         A = cvxopt_matrix(Y, (1, m), 'd')
         b = cvxopt_matrix(np.zeros(1))
+
+        print("{}\np: {}x{}\nq: {}x{}\ng: {}x{}\nh: {}x{}\na: {}x{}\nH: {}x{}\n".format(K,
+                                                                                        P.size[0], P.size[1], P.size[0], P.size[1], q.size[0], q.size[1], G.size[0], G.size[1], h.size[0], h.size[1], A.size[0], A.size[1], H.shape[0], H.shape[1]))
 
         # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
@@ -130,12 +137,12 @@ def accuracy(y: np.ndarray, yi: np.ndarray) -> float:
 ###
 
 
-def _select_kernel(X, y, k='linear', n_l_p=3):
+def _select_kernel(x1, x2, k='linear', n_l_p=3):
     if k == 'gaus':
-        return kernel_gaussian(X, y, sigma=n_l_p)
+        return kernel_gaussian(x1, x2, sigma=n_l_p)
     elif k == 'poli':
-        return kernel_polinomial(X, y, p=n_l_p)
-    return kernel_linear_t(X, y)
+        return kernel_polinomial(x1, x2, p=n_l_p)
+    return kernel_linear_t(x1, x2)
 
 
 def kernel_linear_t(x1, x2):
@@ -143,6 +150,7 @@ def kernel_linear_t(x1, x2):
 
 
 def kernel_polinomial(xi, xj, p=3):
+    # print("###########", (1 + np.dot(xi, xj)) ** p)
     return (1 + np.dot(xi, xj)) ** p
 
 
@@ -150,12 +158,12 @@ def kernel_gaussian(xi, xj, sigma=5.0):
     return np.exp(-np.linalg.norm(xi-xj)**2 / (2 * (sigma ** 2)))
 
 
-def _H(X, y, k):
+def _H(X, y, k, n_l_p):
     n, m = X.shape
     aux_H = [[0 for x in range(n)] for y in range(n)]
     for i in range(len(aux_H)):
         for j in range(len(aux_H[i])):
-            t = y[i]*y[j]*_select_kernel(X[i], X[j], k)
+            t = y[i]*y[j]*_select_kernel(X[i], X[j], k, n_l_p)
             aux_H[i][j] = t
     aux_H = np.array(aux_H)
     return aux_H

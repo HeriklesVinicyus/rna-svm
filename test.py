@@ -22,28 +22,25 @@ y = np.array(y)
 y = np.where(y==2,-1,1)
 
 x_trein, y_trein, x_test, y_test = form.split_in_training_and_test(X,y,80)
-clsf_l = svm(kernel='teste',C=1000) 
-#clsf_e = svm(kernel='gaus',non_linear_parametro=0.1)
-#polinomial não ta funcionando. (não sei o pq)
-#clsf_p = svm(kernel='poli',non_linear_parametro=3) 
+clsf_l = svm(kernel='linear',C=1000) 
+clsf_e = svm(kernel='gaus',non_linear_parametro=100)
+#clsf_p = svm(kernel='poli',non_linear_parametro=3,C=1000) 
 
 #teste
 clsf_t_rbf = SVC(kernel='rbf')
 clsf_t_l = SVC(kernel='linear',C=1000)
 clsf_t_poli = SVC(kernel='poly')
 
-#print(np.array(x_trein))
-
 clsf_l.fit(np.array(x_trein),np.array(y_trein))
-#clsf_e.fit(np.array(x_trein),np.array(y_trein))
-#clsf_p.fit(x_trein,y_trein)
+clsf_e.fit(np.array(x_trein),np.array(y_trein))
+#clsf_p.fit(np.array(x_trein),np.array(y_trein))#erro
 
 clsf_t_rbf.fit(x_trein,y_trein)
 clsf_t_l.fit(x_trein,y_trein)
 clsf_t_poli.fit(x_trein,y_trein)
 
 yi_l = [clsf_l.predict(x) for x in x_test]
-#yi_e = [clsf_e.predict(x) for x in x_test]
+yi_e = [clsf_e.predict(x) for x in x_test]
 #yi_p = [clsf_p.predict(x) for x in x_test]
 
 yi_t_rbf = [clsf_t_rbf.predict([x]) for x in x_test]
@@ -51,13 +48,10 @@ yi_t_l = [clsf_t_l.predict([x]) for x in x_test]
 yi_t_poli = [clsf_t_poli.predict([x]) for x in x_test]
 
 
-#print('\n\n\n',yi_l,'\n\n\n',y_test)
-
 print('Acuracia:')
 print('linear: ',form.accuracy(y_test,yi_l))
-#print('Gaussiano: ',form.accuracy(y_test,yi_e))
+print('Gaussiano: ',form.accuracy(y_test,yi_e))
 #print('Polinomial: ',form.accuracy(y_test,yi_p))
-
 
 print('(test)SVC rfb: ',form.accuracy(y_test,yi_t_rbf))
 print('(test)SVC linear: ',form.accuracy(y_test,yi_t_l))
