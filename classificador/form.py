@@ -9,69 +9,52 @@ import numpy as np
 import random
 import math
 
-# kernels
 
-"""
-def linear_kernel(x1, x2):
-    return np.dot(x1, x2)
-
-
-def polynomial_kernel(x1, x2, p=3):
-    #return (1 + np.dot(x, y)) ** p
-    return(np.dot(x1,x2)**p)
-
-
-def gaussian_kernel(x1, x2, sigma:float=5.0):
-    return np.exp(-np.linalg.norm(x1-x2)**2 / (2 * (sigma ** 2)))
-"""
-
-def find_alpha(X,Y,C)->np.ndarray:
-    #Setting solver parameters (change default to decrease tolerance) 
+def find_alpha(X, Y, C, K) -> np.ndarray:
+    # Setting solver parameters (change default to decrease tolerance)
     cvxopt_solvers.options['show_progress'] = False
     cvxopt_solvers.options['abstol'] = 1e-10
     cvxopt_solvers.options['reltol'] = 1e-10
     cvxopt_solvers.options['feastol'] = 1e-10
 
-    if C== None:
-        m,n = X.shape
-        #y = Y.reshape(-1,1) * 1.
-        X_dash = (Y.reshape(-1,1) * 1.) * X
-        H = np.dot(X_dash , X_dash.T) * 1.
+    if C == None:
+        m, n = X.shape
+        X_dash = _select_kernel(X, Y, K)
+        H = np.dot(X_dash, X_dash.T) * 1.
 
-        #Converting into cvxopt format
+        # Converting into cvxopt format
         P = cvxopt_matrix(H)
         q = cvxopt_matrix(-np.ones((m, 1)))
         G = cvxopt_matrix(-np.eye(m))
         h = cvxopt_matrix(np.zeros(m))
-        #A = cvxopt_matrix(y.reshape(1, -1))
         A = cvxopt_matrix(Y, (1, m), 'd')
         b = cvxopt_matrix(np.zeros(1))
-    
-        #Run solver
+
+        # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
         alphas = np.array(sol['x'])
     else:
         C = 10
-        m,n = X.shape
-        y = Y.reshape(-1,1) * 1.
-        X_dash = y * X
-        H = np.dot(X_dash , X_dash.T) * 1.#K linear
+        m, n = X.shape
+        y = Y.reshape(-1, 1) * 1.
+        X_dash = _select_kernel(X, Y, K)
+        H = np.dot(X_dash, X_dash.T) * 1.  # K linear
 
-        #Converting into cvxopt format - as previously
+        # Converting into cvxopt format - as previously
         P = cvxopt_matrix(H)
         q = cvxopt_matrix(-np.ones((m, 1)))
-        G = cvxopt_matrix(np.vstack((np.eye(m)*-1,np.eye(m))))
+        G = cvxopt_matrix(np.vstack((np.eye(m)*-1, np.eye(m))))
         h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
         A = cvxopt_matrix(y.reshape(1, -1))
         b = cvxopt_matrix(np.zeros(1))
 
-        #Run solver
+        # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
         alphas = np.array(sol['x'])
     return alphas
 
 
-### não sei como chamar esse bloco
+# não sei como chamar esse bloco
 def shuffle_date_base(data_base: list) -> list:
     """Função para embaralhar a base em para uma nova variável 
 
@@ -131,7 +114,7 @@ def split_in_training_and_test(X: np.ndarray, Y: np.ndarray, size_training_db: i
 
 def accuracy(y: np.ndarray, yi: np.ndarray) -> float:
 
-    ## Validar que os vetores são arrays' numpy
+    # Validar que os vetores são arrays' numpy
     aux_y = y
     aux_yi = yi
     if type(y) != np.ndarray:
@@ -145,4 +128,24 @@ def accuracy(y: np.ndarray, yi: np.ndarray) -> float:
             ac += 1
     # porcentagem da acuracia
     return (ac*100)/len(y)
+###
+
+###
+
+def _select_kernel(X, y, k):
+    if k == 'gaus':
+        return kernel_gaussian(X,y)
+    elif k == 'poli':
+        return kernel_polinomial(X,y)
+    return kernel_linear(X,y)
+
+def kernel_linear(X,y):
+    return (y.reshape(-1, 1) * 1.) * X
+
+def kernel_polinomial(xi, xj, p=3):
+    return (1 + np.dot(xi, xj)) ** p
+
+def kernel_gaussian(xi, xj, sigma=5.0):
+    return np.exp(-np.linalg.norm(xi-xj)**2 / (2 * (sigma ** 2)))
+
 ###
