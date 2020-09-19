@@ -9,6 +9,8 @@ import numpy as np
 import random
 import math
 
+import exemplos.lixo as log
+
 
 def find_alpha(X, Y, C, K, n_l_p=3) -> np.ndarray:
     # Setting solver parameters (change default to decrease tolerance)
@@ -29,15 +31,10 @@ def find_alpha(X, Y, C, K, n_l_p=3) -> np.ndarray:
         A = cvxopt_matrix(Y, (1, m), 'd')
         b = cvxopt_matrix(np.zeros(1))
 
-        print("{}\np: {}x{}\nq: {}x{}\ng: {}x{}\nh: {}x{}\na: {}x{}\nH: {}x{}\n".format(K,
-                                                                                        P.size[0], P.size[1], P.size[0], P.size[1], q.size[0], q.size[1], G.size[0], G.size[1], h.size[0], h.size[1], A.size[0], A.size[1], H.shape[0], H.shape[1]))
-
-
         # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
         alphas = np.array(sol['x'])
     else:
-        C = 10
         m, n = X.shape
         H = _H(X, Y, K, n_l_p)
 
@@ -48,9 +45,6 @@ def find_alpha(X, Y, C, K, n_l_p=3) -> np.ndarray:
         h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
         A = cvxopt_matrix(Y, (1, m), 'd')
         b = cvxopt_matrix(np.zeros(1))
-
-        print("{}\np: {}x{}\nq: {}x{}\ng: {}x{}\nh: {}x{}\na: {}x{}\nH: {}x{}\n".format(K,
-                                                                                        P.size[0], P.size[1], P.size[0], P.size[1], q.size[0], q.size[1], G.size[0], G.size[1], h.size[0], h.size[1], A.size[0], A.size[1], H.shape[0], H.shape[1]))
 
         # Run solver
         sol = cvxopt_solvers.qp(P, q, G, h, A, b)
@@ -134,30 +128,8 @@ def accuracy(y: np.ndarray, yi: np.ndarray) -> float:
     return (ac*100)/len(y)
 ###
 
+
 ###
-
-
-def _select_kernel(x1, x2, k='linear', n_l_p=3):
-    if k == 'gaus':
-        return kernel_gaussian(x1, x2, sigma=n_l_p)
-    elif k == 'poli':
-        return kernel_polinomial(x1, x2, p=n_l_p)
-    return kernel_linear_t(x1, x2)
-
-
-def kernel_linear_t(x1, x2):
-    return np.dot(x1, x2)
-
-
-def kernel_polinomial(xi, xj, p=3):
-    # print("###########", (1 + np.dot(xi, xj)) ** p)
-    return (1 + np.dot(xi, xj)) ** p
-
-
-def kernel_gaussian(xi, xj, sigma=5.0):
-    return np.exp(-np.linalg.norm(xi-xj)**2 / (2 * (sigma ** 2)))
-
-
 def _H(X, y, k, n_l_p):
     n, m = X.shape
     aux_H = [[0 for x in range(n)] for y in range(n)]
@@ -165,6 +137,59 @@ def _H(X, y, k, n_l_p):
         for j in range(len(aux_H[i])):
             t = y[i]*y[j]*_select_kernel(X[i], X[j], k, n_l_p)
             aux_H[i][j] = t
+    log._registrar_log(k, aux_H)
     aux_H = np.array(aux_H)
     return aux_H
+
+
+def _select_kernel(x1, x2, k='linear', n_l_p=3, a=0.5, cont=2):
+    if k == 'gaus':
+        return kernel_gaussian(x1, x2, sigma=n_l_p)
+    elif k == 'poli':
+        return kernel_polinomial(x1, x2, p=n_l_p)
+    elif k == 'lrbf':
+        return kernel_lrbf(x1, x2, sigma=n_l_p)
+    elif k == 'exp':
+        return kernel_exponencial(x1, x2, sigma=n_l_p)
+    elif k == 'tanh':
+        return kernel_tangente_hiperbolica(x1, x2, a, cont)
+
+    return kernel_linear_t(x1, x2)
+
+
+def kernel_linear_t(x1, x2):
+    return float(np.dot(x1, x2))
+
+
+def kernel_polinomial(x1, x2, p=3):
+    aux_p = int(p)
+    return float((np.dot(x1, x2)+1) ** aux_p)
+
+
+def kernel_gaussian(x1, x2, sigma=5.0):
+    return np.exp(-np.linalg.norm(x1-x2)**2 / (2 * (sigma ** 2)))
+
+
+def kernel_lrbf(x1, x2, sigma=5.0):
+    """Kernel Laplacian"""
+    return np.exp(-np.linalg.norm(x1-x2) / sigma)
+
+
+def kernel_exponencial(x1, x2, sigma=5.0):
+    """ Exponential Kernel"""
+    return np.exp(-np.linalg.norm(x1-x2) / (2 * (sigma ** 2)))
+
+
+def kernel_tangente_hiperbolica(x1, x2, a: float = 0.5, const: float = 2):
+    """Hyperbolic Tangent (Sigmoid) Kernel: k(x,x′)=tanh(a * x⋅x′ + c);
+    Args:
+        x1 ([type]): [description]
+        x ([type]): [description]
+        a (float): inclinação alfa; Um valor comum para alfa é 1 / N, onde N é a dimensão dos dados.
+        const (float): constante de interceptação
+    Returns:
+        [type]: [description]
+    """
+    return float(np.tanh(a*np.dot(x1, x2)+const))
+
 ###
