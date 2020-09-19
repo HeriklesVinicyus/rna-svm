@@ -4,7 +4,7 @@ from classificador.form import kernel_tangente_hiperbolica
 
 
 class svm:
-    def __init__(self, kernel: str = 'linear', C: float = None, non_linear_parametro: float = 3, a:float = 0.6, const: float = 2) -> None:
+    def __init__(self, kernel: str = 'linear', C: float = None, non_linear_parametro: float = 3, a:float = 0.6) -> None:
         """[summary]
 
         Args:
@@ -22,7 +22,6 @@ class svm:
         self.n_l_p = non_linear_parametro
         if kernel == 'tanh':
             self.a = a
-            self.const = const
 
     def fit(self, X, y):
         if(self.kernel == 'linear'):
